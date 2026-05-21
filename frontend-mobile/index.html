@@ -1,0 +1,59 @@
+ <!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Check-IT - Chauffeur</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#667eea">
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+</head>
+<body>
+    <div class="app">
+        <header>
+            <h1>🚚 Check-IT</h1>
+            <p>Livraisons du jour</p>
+        </header>
+
+        <!-- Liste des livraisons -->
+        <div id="listeLivraisons" class="liste-livraisons">
+            <div class="loading">Chargement des livraisons...</div>
+        </div>
+
+        <!-- Modal de livraison (popup pour valider) -->
+        <div id="modalLivraison" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>📦 Livraison</h2>
+                    <button class="close-modal">&times;</button>
+                </div>
+                <div id="detailsLivraison" class="details-livraison">
+                    <!-- Infos colis chargées dynamiquement -->
+                </div>
+                
+                <div class="section">
+                    <label>✍️ Signature du client</label>
+                    <canvas id="signatureCanvas" class="signature-canvas" width="600" height="200"></canvas>
+                    <div class="signature-buttons">
+                        <button id="effacerSignature" class="btn btn-secondary">🗑️ Effacer</button>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <label>📸 Photo du colis (optionnel)</label>
+                    <div class="photo-area">
+                        <button id="prendrePhoto" class="btn btn-secondary">📷 Prendre une photo</button>
+                        <div id="apercuPhoto" class="apercu-photo"></div>
+                        <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none">
+                    </div>
+                </div>
+
+                <button id="validerLivraison" class="btn btn-success">✅ Valider la livraison</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

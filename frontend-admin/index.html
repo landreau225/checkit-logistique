@@ -1,0 +1,78 @@
+ <!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check-IT - Administration</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📦 Check-IT</h1>
+            <p>Administration des livraisons</p>
+        </header>
+
+        <!-- Formulaire pour ajouter une livraison -->
+        <div class="card">
+            <h2>➕ Nouvelle livraison</h2>
+            <form id="ajoutLivraison">
+                <div class="form-group">
+                    <label>Numéro de colis *</label>
+                    <input type="text" id="numero_colis" required placeholder="Ex: COLIS-123">
+                </div>
+                <div class="form-group">
+                    <label>Nom du client *</label>
+                    <input type="text" id="client_nom" required placeholder="Ex: Jean Dupont">
+                </div>
+                <div class="form-group">
+                    <label>Adresse de livraison *</label>
+                    <input type="text" id="adresse" required placeholder="Ex: 10 Rue de Paris, 75001 Paris">
+                </div>
+                <button type="submit" class="btn btn-primary">📦 Ajouter la livraison</button>
+            </form>
+        </div>
+
+        <!-- Liste des livraisons -->
+        <div class="card">
+            <h2>📋 Liste des livraisons</h2>
+            <div class="filtres">
+                <button id="btnToutes" class="btn-filtre actif">Toutes</button>
+                <button id="btnAttente" class="btn-filtre">En attente</button>
+                <button id="btnLivrees" class="btn-filtre">Livrées</button>
+            </div>
+            <div class="table-container">
+                <table id="livraisonsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>N° Colis</th>
+                            <th>Client</th>
+                            <th>Adresse</th>
+                            <th>Statut</th>
+                            <th>Date livraison</th>
+                            <th>Signature</th>
+                        </tr>
+                    </thead>
+                    <tbody id="livraisonsBody">
+                        <tr>
+                            <td colspan="7" class="loading">Chargement des livraisons...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour afficher la signature -->
+    <div id="signatureModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>📝 Signature du client</h3>
+            <canvas id="signatureCanvas" class="signature-display"></canvas>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
