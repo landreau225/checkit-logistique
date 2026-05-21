@@ -8,6 +8,11 @@ const PORT = 3000;
 app.use(cors());
 app.use(express.json({ limit: '10mb' })); // Pour les signatures (base64)
 
+// Ajoutez cette route juste après app.use(...)
+app.get('/', (req, res) => {
+  res.json({ message: 'API Check-IT fonctionne !' });
+});
+
 // ---------- ROUTES API ----------
 
 // 1. Récupérer toutes les livraisons (pour l'admin)
