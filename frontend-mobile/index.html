@@ -1,59 +1,161 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Check-IT - Chauffeur</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#667eea">
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; }
+        header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center; }
+        .container { max-width: 600px; margin: 0 auto; padding: 15px; }
+        .card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); cursor: pointer; }
+        .card:active { transform: scale(0.98); }
+        .numero { font-size: 1.2em; font-weight: bold; color: #667eea; }
+        .client { margin: 5px 0; }
+        .adresse { color: #666; font-size: 0.9em; }
+        .loading { text-align: center; padding: 40px; color: #999; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
+        .modal-content { background: white; margin: 20px auto; border-radius: 20px; width: 95%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 20px 20px 0 0; }
+        .close-modal { background: none; border: none; font-size: 28px; cursor: pointer; color: white; }
+        .section { padding: 15px 20px; border-bottom: 1px solid #eee; }
+        .signature-canvas { width: 100%; height: 150px; border: 2px dashed #ccc; border-radius: 10px; background: white; touch-action: none; }
+        .btn { padding: 12px 20px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-secondary { background: #6c757d; color: white; margin-top: 10px; }
+        .btn-danger { background: #dc3545; color: white; margin-top: 10px; }
+        .deconnexion { position: fixed; bottom: 20px; right: 20px; background: #dc3545; color: white; border: none; border-radius: 50%; width: 50px; height: 50px; font-size: 20px; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+    </style>
 </head>
 <body>
-    <div class="app">
-        <header>
-            <h1>🚚 Check-IT</h1>
-            <p>Livraisons du jour</p>
-        </header>
+    <header>
+        <h1>🚚 Check-IT Chauffeur</h1>
+        <p>Livraisons du jour</p>
+    </header>
+    <div class="container" id="listeLivraisons">
+        <div class="loading">Chargement...</div>
+    </div>
+    <button class="deconnexion" onclick="deconnexion()">🚪</button>
 
-        <!-- Liste des livraisons -->
-        <div id="listeLivraisons" class="liste-livraisons">
-            <div class="loading">Chargement des livraisons...</div>
-        </div>
-
-        <!-- Modal de livraison (popup pour valider) -->
-        <div id="modalLivraison" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>📦 Livraison</h2>
-                    <button class="close-modal">&times;</button>
-                </div>
-                <div id="detailsLivraison" class="details-livraison">
-                    <!-- Infos colis chargées dynamiquement -->
-                </div>
-                
-                <div class="section">
-                    <label>✍️ Signature du client</label>
-                    <canvas id="signatureCanvas" class="signature-canvas" width="600" height="200"></canvas>
-                    <div class="signature-buttons">
-                        <button id="effacerSignature" class="btn btn-secondary">🗑️ Effacer</button>
-                    </div>
-                </div>
-
-                <div class="section">
-                    <label>📸 Photo du colis (optionnel)</label>
-                    <div class="photo-area">
-                        <button id="prendrePhoto" class="btn btn-secondary">📷 Prendre une photo</button>
-                        <div id="apercuPhoto" class="apercu-photo"></div>
-                        <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none">
-                    </div>
-                </div>
-
-                <button id="validerLivraison" class="btn btn-success">✅ Valider la livraison</button>
+    <div id="modalLivraison" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📦 Livraison</h2>
+                <button class="close-modal">&times;</button>
             </div>
+            <div id="detailsLivraison" class="section"></div>
+            <div class="section">
+                <label>✍️ Signature client</label>
+                <canvas id="signatureCanvas" class="signature-canvas"></canvas>
+                <button id="effacerSignature" class="btn btn-secondary">🗑️ Effacer</button>
+            </div>
+            <button id="validerLivraison" class="btn btn-success">✅ Valider la livraison</button>
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <script>
+        const API_URL = window.location.origin + '/api';
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '../frontend-admin/login.html';
+
+        async function fetchAPI(url, options = {}) {
+            options.headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...options.headers };
+            const response = await fetch(API_URL + url, options);
+            if (response.status === 401 || response.status === 403) {
+                localStorage.removeItem('token');
+                window.location.href = '../frontend-admin/login.html';
+            }
+            return response;
+        }
+
+        function deconnexion() {
+            localStorage.removeItem('token');
+            window.location.href = '../frontend-admin/login.html';
+        }
+
+        let livraisons = [];
+        let livraisonCourante = null;
+        let signatureData = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            chargerLivraisons();
+            initSignature();
+            setInterval(chargerLivraisons, 30000);
+            
+            document.querySelector('.close-modal').onclick = () => document.getElementById('modalLivraison').style.display = 'none';
+            document.getElementById('effacerSignature').onclick = () => {
+                const canvas = document.getElementById('signatureCanvas');
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                signatureData = null;
+            };
+            document.getElementById('validerLivraison').onclick = async () => {
+                if (!signatureData) { alert('Signature requise'); return; }
+                const response = await fetchAPI(`/livraisons/${livraisonCourante.id}/valider`, {
+                    method: 'POST',
+                    body: JSON.stringify({ signature_base64: signatureData, photo_url: null })
+                });
+                if (response.ok) {
+                    alert('✅ Livraison validée');
+                    document.getElementById('modalLivraison').style.display = 'none';
+                    chargerLivraisons();
+                } else alert('❌ Erreur');
+            };
+        });
+
+        async function chargerLivraisons() {
+            try {
+                const response = await fetchAPI('/livraisons/en-attente');
+                livraisons = await response.json();
+                afficherListe();
+            } catch(e) { console.error(e); }
+        }
+
+        function afficherListe() {
+            const container = document.getElementById('listeLivraisons');
+            if (livraisons.length === 0) {
+                container.innerHTML = '<div class="loading">✅ Toutes les livraisons sont terminées !</div>';
+                return;
+            }
+            container.innerHTML = livraisons.map(l => `
+                <div class="card" onclick="ouvrirModal(${l.id})">
+                    <div class="numero">📦 ${l.numero_colis}</div>
+                    <div class="client">👤 ${l.client_nom}</div>
+                    <div class="adresse">📍 ${l.adresse}</div>
+                </div>
+            `).join('');
+        }
+
+        window.ouvrirModal = (id) => {
+            livraisonCourante = livraisons.find(l => l.id === id);
+            document.getElementById('detailsLivraison').innerHTML = `
+                <p><strong>Colis:</strong> ${livraisonCourante.numero_colis}</p>
+                <p><strong>Client:</strong> ${livraisonCourante.client_nom}</p>
+                <p><strong>Adresse:</strong> ${livraisonCourante.adresse}</p>
+            `;
+            const canvas = document.getElementById('signatureCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.clientWidth;
+            canvas.height = 150;
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            signatureData = null;
+            document.getElementById('modalLivraison').style.display = 'block';
+        };
+
+        function initSignature() {
+            const canvas = document.getElementById('signatureCanvas');
+            const ctx = canvas.getContext('2d');
+            let drawing = false;
+            canvas.addEventListener('mousedown', (e) => { drawing = true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); });
+            canvas.addEventListener('mousemove', (e) => { if(drawing){ ctx.lineTo(e.offsetX, e.offsetY); ctx.stroke(); ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); } });
+            canvas.addEventListener('mouseup', () => { drawing = false; signatureData = canvas.toDataURL(); });
+            canvas.addEventListener('touchstart', (e) => { e.preventDefault(); const rect = canvas.getBoundingClientRect(); const x = e.touches[0].clientX - rect.left; const y = e.touches[0].clientY - rect.top; drawing = true; ctx.beginPath(); ctx.moveTo(x, y); });
+            canvas.addEventListener('touchmove', (e) => { e.preventDefault(); if(drawing){ const rect = canvas.getBoundingClientRect(); const x = e.touches[0].clientX - rect.left; const y = e.touches[0].clientY - rect.top; ctx.lineTo(x, y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x, y); } });
+            canvas.addEventListener('touchend', () => { drawing = false; signatureData = canvas.toDataURL(); });
+        }
+    </script>
 </body>
 </html>
