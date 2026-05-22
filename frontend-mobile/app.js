@@ -1,5 +1,5 @@
-const API_URL = 'http://localhost:3000/api';
-
+//const API_URL = 'http://localhost:3000/api';
+const API_URL = 'https://checkit-logistique-1.onrender.com/api';
 let livraisonsEnAttente = [];
 let livraisonCourante = null;
 let signatureData = null;
