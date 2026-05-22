@@ -4,6 +4,21 @@
 let toutesLivraisons = [];
 let filtreActuel = 'toutes';
 
+// Vérifier l'authentification
+const token = localStorage.getItem('token');
+if (!token) {
+    window.location.href = 'login.html';
+}
+
+// Ajouter le token à tous les fetch
+async function fetchWithAuth(url, options = {}) {
+    options.headers = {
+        ...options.headers,
+        'Authorization': `Bearer ${token}`
+    };
+    return fetch(url, options);
+}
+
 // Chargement au démarrage
 document.addEventListener('DOMContentLoaded', () => {
     chargerLivraisons();

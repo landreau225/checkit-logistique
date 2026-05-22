@@ -18,6 +18,46 @@ app.get('/', (req, res) => {
   res.json({ message: 'API Check-IT fonctionne !' });
 });
 
+
+// ========== ROUTES D'AUTHENTIFICATION ==========
+
+// Login
+app.post('/api/login', async (req, res) => {
+  const { username, password } = req.body;
+  
+  try {
+    let user;
+    
+    if (process.env.DATABASE_URL) {
+      // PostgreSQL
+      const result = await db.query('SELECT * FROM utilisateurs WHERE username = $1', [username]);
+      user = result.rows[0];
+    } else {
+      // SQLite
+      user = await new Promise((resolve, reject) => {
+        db.get('SELECT * FROM utilisateurs WHERE username = ?', [username], (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
+        });
+      });
+    }
+    
+    if (!user) {
+      return res.status(401).json({ error: 'Identifiants invalides' });
+    }
+    
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) {
+      return res.status(401).json({ error: 'Identifiants invalides' });
+    }
+    
+    const token = generateToken(user);
+    res.json({ token, user: { id: user.id, username: user.username, role: user.role } });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ---------- ROUTES API ----------
 
 // 1. Récupérer toutes les livraisons (pour l'admin)

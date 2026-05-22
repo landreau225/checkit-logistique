@@ -16,6 +16,21 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(chargerLivraisons, 30000);
 });
 
+// Vérifier l'authentification
+const token = localStorage.getItem('token');
+if (!token) {
+    window.location.href = 'login.html';
+}
+
+// Ajouter le token à tous les fetch
+async function fetchWithAuth(url, options = {}) {
+    options.headers = {
+        ...options.headers,
+        'Authorization': `Bearer ${token}`
+    };
+    return fetch(url, options);
+}
+
 async function chargerLivraisons() {
     try {
         const response = await fetch(`${API_URL}/livraisons/en-attente`);
