@@ -4,9 +4,14 @@ const db = require('./db');
 
 const app = express();
 const PORT = 3000;
+const path = require('path');
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' })); // Pour les signatures (base64)
+
+// Servir les fichiers statiques (interface admin et mobile)
+app.use('/frontend-admin', express.static(path.join(__dirname, '..', 'frontend-admin')));
+app.use('/frontend-mobile', express.static(path.join(__dirname, '..', 'frontend-mobile')));
 
 // Ajoutez cette route juste après app.use(...)
 app.get('/', (req, res) => {
