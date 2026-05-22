@@ -21,41 +21,31 @@ app.get('/', (req, res) => {
 
 // ========== ROUTES D'AUTHENTIFICATION ==========
 
-// Login
-app.post('/api/login', async (req, res) => {
-  const { username, password } = req.body;
-  
-  try {
-    let user;
-    
-    if (process.env.DATABASE_URL) {
-      // PostgreSQL
-      const result = await db.query('SELECT * FROM utilisateurs WHERE username = $1', [username]);
-      user = result.rows[0];
-    } else {
-      // SQLite
-      user = await new Promise((resolve, reject) => {
-        db.get('SELECT * FROM utilisateurs WHERE username = ?', [username], (err, row) => {
-          if (err) reject(err);
-          else resolve(row);
-        });
-      });
-    }
-    
-    if (!user) {
-      return res.status(401).json({ error: 'Identifiants invalides' });
-    }
-    
-    const validPassword = await bcrypt.compare(password, user.password);
-    if (!validPassword) {
-      return res.status(401).json({ error: 'Identifiants invalides' });
-    }
-    
-    const token = generateToken(user);
-    res.json({ token, user: { id: user.id, username: user.username, role: user.role } });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+const bcrypt = require('bcrypt');
+const db = require('./db');
+const { generateToken, verifyToken, verifyAdmin } = require('./auth');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(cors());
+app.use(express.json({ limit: '10mb' }));
+
+// Servir les fichiers statiques (CHEMIN CORRIGÉ)
+app.use('/frontend-admin', express.static(path.join(__dirname, '../frontend-admin')));
+app.use('/frontend-mobile', express.static(path.join(__dirname, '../frontend-mobile')));
+
+// Route racine - rediriger vers login
+app.get('/', (req, res) => {
+  res.redirect('/frontend-admin/login.html');
+});
+
+// Route de test API
+app.get('/api/status', (req, res) => {
+  res.json({ status: 'OK', message: 'API Check-IT fonctionne' });
 });
 
 // ---------- ROUTES API ----------
